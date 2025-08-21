@@ -1,115 +1,93 @@
+# Ethical Hacking Tools Collection
 
-# Laboratorio Consolidado de Hacking Ético
+Este directorio contiene una colección de herramientas y laboratorios extraídos de los módulos del curso "Hacking Ético en Aplicativos Web 2025". Han sido agrupados aquí para facilitar su acceso y uso autónomo, sin depender de la estructura original del curso.
 
-Este proyecto consolida los diversos laboratorios, servicios vulnerables y herramientas de pentesting del "Curso de Hacking Ético en Aplicativos Web 2025" en un único entorno portable y fácil de desplegar. El objetivo es proporcionar un campo de entrenamiento autocontenido que se pueda levantar y destruir con simples comandos.
+Cada subdirectorio representa un laboratorio o conjunto de herramientas específico, nombrado siguiendo la convención `M<Módulo>_L<Lección>_<NombreDescriptivoDeLaHerramienta>`.
 
----
+## Contenido de la Colección:
 
-## Arquitectura del Laboratorio
+Aquí se detalla cada laboratorio y una breve descripción de cómo usarlo:
 
-Este entorno está orquestado por Docker Compose y se compone de los siguientes servicios principales:
+### M2_L1_DockerComposeLab
+*   **Descripción:** Laboratorio basado en Docker Compose.
+*   **Uso:** Navega a `M2_L1_DockerComposeLab` y ejecuta `docker-compose up -d` para iniciar los servicios.
 
-### Aplicaciones Web Vulnerables (Objetivos)
+### M2_L2_Laboratorio
+*   **Descripción:** Laboratorio de Python, probablemente relacionado con la aplicación SecureBankApp.
+*   **Uso:** Navega a `M2_L2_Laboratorio`. Busca archivos `.py` o `.ipynb` para ejecutar scripts o cuadernos. Puede requerir `pip install -r requirements.txt`.
 
-| Servicio | URL de Acceso | Credenciales por Defecto |
-| :--- | :--- | :--- |
-| **OWASP Juice Shop** | `http://localhost:3000` | N/A (autenticación propia) |
-| **DVWA** | `http://localhost:8080` | `admin` / `password` |
+### M2_L3_Laboratorio
+*   **Descripción:** Laboratorio de Python con scripts para gestión de bases de datos.
+*   **Uso:** Navega a `M2_L3_Laboratorio`. Ejecuta los scripts Python (`.py`) en el orden indicado (ej. `01_CrearDB.py`).
 
-### Herramientas de Automatización
+### M2_L3_Eticalab
+*   **Descripción:** Laboratorio de aplicación web Python.
+*   **Uso:** Navega a `M2_L3_Eticalab`. Instala dependencias (`pip install -r requirements.txt`) y ejecuta la aplicación (ej. `python app.py`).
 
-| Servicio | URL de Acceso | Credenciales por Defecto |
-| :--- | :--- | :--- |
-| **n8n** | `http://localhost:5678` | Ver archivo `.env` (por defecto: `admin` / `changeme`) |
+### M2_L4_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose.
+*   **Uso:** Navega a `M2_L4_Laboratorio` y ejecuta `docker-compose up -d`.
 
-### Herramientas de Pentesting Adicionales
+### M2_L4_LaboratorioKaliLinux
+*   **Descripción:** Laboratorio basado en Docker Compose para configurar un entorno Kali Linux.
+*   **Uso:** Navega a `M2_L4_LaboratorioKaliLinux` y ejecuta `docker-compose up -d`.
 
-| Servicio | Uso Principal | Notas |
-| :--- | :--- | :--- |
-| **Nmap** | Escaneo de redes | Ejecutar vía `docker exec` |
-| **Metasploit** | Explotación y post-explotación | Ejecutar vía `docker exec` |
-| **Sqlmap** | Inyección SQL | Ejecutar vía `docker exec` |
-| **Nikto** | Escaneo de vulnerabilidades web | Ejecutar vía `docker exec` |
-| **GoBuster** | Fuerza bruta de directorios/archivos | Ejecutar vía `docker exec` |
+### M3_L2_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose.
+*   **Uso:** Navega a `M3_L2_Laboratorio` y ejecuta `docker-compose up -d`.
 
-### Laboratorio de Microservicios y Monitoreo (SIEM)
+### M3_L3_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose, probablemente relacionado con la configuración de DNS.
+*   **Uso:** Navega a `M3_L3_Laboratorio` y ejecuta `docker-compose up -d`. Revisa los archivos de configuración de DNS.
 
-| Servicio | URL/Puerto de Acceso | Propósito |
-| :--- | :--- | :--- |
-| **Kibana** | `http://localhost:5601` | Visualización de logs y SIEM |
-| **Elasticsearch** | `localhost:9200` | Almacenamiento y búsqueda de logs |
-| **Logstash** | `localhost:5044` | Ingesta y procesamiento de logs |
-| **Auth Service** | `http://localhost:5001` | Microservicio de autenticación |
-| **User Service** | `http://localhost:5002` | Microservicio de usuarios |
-| **Product Service** | `http://localhost:5003` | Microservicio de productos |
-| **OPA** | `http://localhost:8181` | Motor de políticas de seguridad |
-| **Locust** | `http://localhost:8089` | Herramienta de pruebas de carga |
+### M3_L4_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose con una aplicación Python y base de datos.
+*   **Uso:** Navega a `M3_L4_Laboratorio` y ejecuta `docker-compose up -d`.
 
----
+### M3_L5_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose con Nginx y una aplicación web.
+*   **Uso:** Navega a `M3_L5_Laboratorio` y ejecuta `docker-compose up -d`.
 
-## Guía de Inicio Rápido
+### M3_L6_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose con scripts de configuración de red.
+*   **Uso:** Navega a `M3_L6_Laboratorio` y ejecuta `docker-compose up -d`. Revisa y ejecuta el script `.sh` para la configuración de red.
 
-### Prerrequisitos
+### M3_L7_Laboratorio
+*   **Descripción:** Laboratorio integral de Docker Compose para microservicios y herramientas de seguridad (Falco, Kong, Suricata, etc.).
+*   **Uso:** Navega a `M3_L7_Laboratorio`. Este laboratorio es complejo y puede contener múltiples `docker-compose.yml` o scripts (`.sh`, `.py`) para diferentes componentes. Revisa los archivos para entender la orquestación.
 
-- **Docker**: [Instrucciones de instalación](https://docs.docker.com/get-docker/)
-- **Docker Compose**: Generalmente incluido con Docker Desktop.
-- Un cliente de terminal con **Bash** (como Git Bash en Windows, o cualquier terminal en Linux/macOS).
+### M3_L8_Laboratorio
+*   **Descripción:** Laboratorio basado en Docker Compose con componentes de red y scripts de shell.
+*   **Uso:** Navega a `M3_L8_Laboratorio` y ejecuta `docker-compose up -d`. Revisa los scripts `.sh` para la interacción.
 
-### 1. Levantar el Laboratorio
+### M4_L1_Laboratorio
+*   **Descripción:** Laboratorio con backend Python y frontend JavaScript/HTML.
+*   **Uso:** Navega a `M4_L1_Laboratorio`. Ejecuta el backend Python (ej. `python main.py`) y abre el archivo HTML del frontend en un navegador.
 
-Para iniciar todos los servicios en segundo plano, navega a la raíz de este directorio (`ConsolidatedEthicalHackingLab`) y ejecuta:
+### M4_L5_Laboratorio
+*   **Descripción:** Laboratorio de aplicación web PHP con base de datos.
+*   **Uso:** Navega a `M4_L5_Laboratorio`. Requiere un entorno PHP (ej. XAMPP, WAMP). Configura la base de datos con el archivo `.sql` y accede a la aplicación web.
 
-```bash
-docker-compose up -d
-```
+### M4_L5_Laboratorio2
+*   **Descripción:** Otro laboratorio de aplicación web PHP con base de datos.
+*   **Uso:** Similar a `M4_L5_Laboratorio`. Requiere un entorno PHP.
 
-El primer despliegue puede tardar varios minutos mientras Docker descarga las imágenes base y construye los servicios personalizados.
+### M4_Portafolio_Laboratorio1
+*   **Descripción:** Laboratorio de API/aplicación web Python con base de datos.
+*   **Uso:** Navega a `M4_Portafolio_Laboratorio1`. Instala dependencias (`pip install -r requirements.txt`) y ejecuta la aplicación (ej. `python main.py`).
 
-**Nota importante sobre n8n:** El servicio n8n utiliza un archivo `.env` para sus configuraciones y credenciales. Asegúrate de revisar y personalizar el archivo `.env` en la raíz del proyecto con tus propios valores antes de levantar el laboratorio.
+### M4_Portafolio_Laboratorio2
+*   **Descripción:** Laboratorio de API/aplicación web Python con características de seguridad.
+*   **Uso:** Navega a `M4_Portafolio_Laboratorio2`. Instala dependencias y ejecuta la aplicación.
 
-### Acceso a los Servicios y Herramientas
+### M4_UniversalLogin
+*   **Descripción:** Material de laboratorio centrado en conceptos de inicio de sesión universal, incluyendo diagramas y documentación.
+*   **Uso:** Navega a `M4_UniversalLogin`. Abre los archivos `.html` o `.md` en un navegador/editor para revisar el contenido.
 
-Una vez que el laboratorio esté levantado, puedes acceder a los servicios de la siguiente manera:
+### M6_L3_DockerComposeLab
+*   **Descripción:** Laboratorio basado en Docker Compose para reconocimiento y enumeración.
+*   **Uso:** Navega a `M6_L3_DockerComposeLab` y ejecuta `docker-compose up -d`.
 
-*   **Aplicaciones Web Vulnerables (Juice Shop, DVWA, etc.)**: Accede a través de los puertos listados en la sección "Arquitectura del Laboratorio" (ej. `http://localhost:3000` para Juice Shop).
-*   **n8n**: Accede a la interfaz web de n8n en `http://localhost:5678`. Las credenciales por defecto son `admin` / `changeme` (puedes cambiarlas en el archivo `.env`).
-*   **Herramientas de Pentesting Adicionales (Nmap, Metasploit, Sqlmap, Nikto, GoBuster)**: Estas herramientas se ejecutan en contenedores que permanecen activos. Para usarlas, debes ejecutar comandos dentro de sus respectivos contenedores. Por ejemplo:
-    *   **Nmap**: `docker exec -it nmap nmap [opciones] [objetivo]`
-    *   **Metasploit**: `docker exec -it metasploit msfconsole`
-    *   **Sqlmap**: `docker exec -it sqlmap sqlmap [opciones] -u "http://ejemplo.com/vuln?id=1"`
-    *   **Nikto**: `docker exec -it nikto nikto -h http://ejemplo.com`
-    *   **GoBuster**: `docker exec -it gobuster gobuster dir -u http://ejemplo.com -w /path/to/wordlist.txt`
-
-### 2. Usar el Toolkit de Pentesting en Python
-
-El script `toolkit.sh` es un lanzador para las herramientas de escaneo basadas en Python. Para usarlo:
-
-**a. Dar permisos de ejecución al script (solo la primera vez):**
-```bash
-chmod +x toolkit.sh
-```
-
-**b. Ejecutar el toolkit:**
-```bash
-./toolkit.sh
-```
-
-Se presentará un menú interactivo. La primera vez que se ejecute, el script creará automáticamente un entorno virtual de Python y instalará todas las dependencias necesarias.
-
-### 3. Detener y Limpiar el Laboratorio
-
-Para detener todos los contenedores en ejecución, ejecuta:
-
-```bash
-docker-compose down
-```
-
-Para eliminar también los volúmenes de datos (como la base de datos de DVWA y los logs de Elasticsearch), ejecuta:
-
-```bash
-docker-compose down -v
-```
-
----
-
-Proyecto consolidado por IA para fines educativos.
+### M7_L1_DockerComposeLab
+*   **Descripción:** Laboratorio basado en Docker Compose que explora vulnerabilidades web como Inyección SQL y XSS. Contiene documentación y ejemplos.
+*   **Uso:** Navega a `M7_L1_DockerComposeLab`. Ejecuta `docker-compose up -d` para el entorno. Revisa los archivos PDF y otros recursos para los pasos del laboratorio.
