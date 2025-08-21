@@ -1,0 +1,11 @@
+env:
+  - type: "openapi"
+    url: "http://api:8000/openapi.json"
+    name: "API"
+jobs:
+  - type: "activeScan"
+    name: "Active Scan"
+    parameters:
+      maxScanDurationInMinutes: 60
+      context: "API"
+      policy: "API-scan-policy"

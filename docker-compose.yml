@@ -1,0 +1,1035 @@
+version: '3.8'
+
+networks:
+  pentest-net:
+    driver: bridge
+  # Redes para el laboratorio de VLANs (M3/Leccion2)
+  vlan10:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.110.0/24
+  vlan20:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.120.0/24
+  vlan30:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.130.0/24
+  vlan40:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.140.0/24
+  # Redes para el laboratorio de VLANs (M3/Leccion6)
+  admin_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/27
+  finance_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.32/27
+  hr_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.64/27
+  prod_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.96/27
+  # Redes para el laboratorio de VLANs (M3/Leccion8)
+  laboratorio_vlan10:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.100.10.0/26
+  laboratorio_vlan20:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.100.20.0/26
+  laboratorio_vlan30:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.100.30.0/26
+  laboratorio_vlan40:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.100.40.0/26
+  # Red para el laboratorio de aplicaciones web (M3/Leccion4)
+  web-apps-lab-net:
+    driver: bridge
+  # Red para el laboratorio de intranet (M3/Leccion5)
+  red_intranet:
+    driver: bridge
+  # Red para el laboratorio Cyberlab (M8/Leccion1)
+  cyberlab_net:
+    driver: bridge
+  # Red para el laboratorio de seguridad API (M8/Leccion4)
+  sec_api_net:
+    driver: bridge
+  # Red para el laboratorio de Portafolio (M8/Portafolio)
+  portfolio_net:
+    driver: bridge
+  # Red para el laboratorio de Hacking Ético (M6/Leccion3/Actividad1)
+  hacklab-net:
+    driver: bridge
+  # Red para el laboratorio de DVWA (M6/Leccion1/Actividad1)
+  dvwa-net:
+    driver: bridge
+
+volumes:
+  db_data:
+  es_data:
+  kali-data:
+  portainer_data:
+  pgdata:
+  mysql-data:
+  dvwa-mysql-data:
+  openvas_data:
+  logs:
+  db:
+  sonar_data:
+  sonar_logs:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+  data01:
+  zap-reports:
+
+services:
+  # OWASP Juice Shop: Vulnerable Web Application
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    container_name: juice-shop
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - pentest-net
+
+  # DVWA: Damn Vulnerable Web Application
+  dvwa-db:
+    image: mariadb:10.5
+    container_name: dvwa-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dvwa
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - pentest-net
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - dvwa-db
+    networks:
+      - pentest-net
+
+  # ELK Stack for Monitoring and SIEM
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - pentest-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    container_name: kibana
+    restart: always
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - pentest-net
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.13.4
+    container_name: logstash
+    restart: always
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./services/logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      - elasticsearch
+    networks:
+      - pentest-net
+
+  filebeat:
+    build:
+      context: ./services/microservices_lab/filebeat
+    container_name: filebeat
+    restart: always
+    depends_on:
+      - logstash
+      - kibana
+    networks:
+      - pentest-net
+
+  # Microservices Lab
+  opa:
+    image: openpolicyagent/opa:latest-envoy
+    container_name: opa
+    restart: always
+    ports:
+      - "8181:8181"
+    command: 'run --server /policies'
+    volumes:
+      - ./services/microservices_lab/opa/policies:/policies
+    networks:
+      - pentest-net
+
+  auth-service:
+    build:
+      context: ./services/microservices_lab/auth-service
+    container_name: auth-service
+    restart: always
+    ports:
+      - "5001:5000"
+    networks:
+      - pentest-net
+
+  user-service:
+    build:
+      context: ./services/microservices_lab/user-service
+    container_name: user-service
+    restart: always
+    ports:
+      - "5002:5000"
+    networks:
+      - pentest-net
+
+  product-service:
+    build:
+      context: ./services/microservices_lab/product-service
+    container_name: product-service
+    restart: always
+    ports:
+      - "5003:5000"
+    networks:
+      - pentest-net
+
+  # Load Testing Tool
+  locust:
+    image: locustio/locust
+    container_name: locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./services/microservices_lab/:/mnt/locust
+    command: -f /mnt/locust/locustfile.py
+    networks:
+      - pentest-net
+
+  # Kali Linux
+  kali:
+    image: kalilinux/kali-rolling
+    container_name: kali
+    restart: always
+    privileged: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      - kali-data:/root
+
+  # Vulnerable Web Applications
+  mutillidae:
+    image: citizenstig/nowasp
+    container_name: mutillidae
+    restart: always
+    ports:
+      - "8081:80"
+    networks:
+      - pentest-net
+
+  bwapp:
+    image: raesene/bwapp
+    container_name: bwapp
+    restart: always
+    ports:
+      - "8082:80"
+    networks:
+      - pentest-net
+
+  webgoat:
+    image: webgoat/webgoat
+    container_name: webgoat
+    restart: always
+    ports:
+      - "8083:8080"
+    networks:
+      - pentest-net
+
+  webwolf:
+    image: webgoat/webwolf
+    container_name: webwolf
+    restart: always
+    ports:
+      - "9090:9090"
+    networks:
+      - pentest-net
+
+  # Vulnerability Scanner
+  openvas:
+    image: immauss/openvas
+    container_name: openvas
+    restart: always
+    ports:
+      - "9392:9392"
+    environment:
+      - PASSWORD=admin
+    volumes:
+      - openvas_data:/data
+    shm_size: '2gb'
+
+  # Other tools
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "81:80" # Puerto ajustado para evitar conflicto con otros servicios web
+      - "8084:8080" # Puerto ajustado para evitar conflicto
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web-apps-lab-net # Usar la red específica para este laboratorio
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - web-apps-lab-net # Usar la red específica para este laboratorio
+
+  bind:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: dns-server
+    volumes:
+      - ./services/bind/named.conf.options:/etc/bind/named.conf.options
+      - ./services/bind/named.conf.local:/etc/bind/named.conf.local
+      - ./services/bind/db.empresa.local:/var/cache/bind/db.empresa.local
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - pentest-net
+
+  kong:
+    image: kong:3.5
+    container_name: kong
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+      - KONG_PORTAL_GUI_HOST=localhost:8003
+      - KONG_PORT_MAPS=8443:443,8003:80
+    volumes:
+      - ./services/kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    ports:
+      - '8004:8000' # Puerto ajustado
+      - '8443:8443'
+      - '8005:8001' # Puerto ajustado
+    networks:
+      - pentest-net
+
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    hostname: "localhost"
+    ports:
+      - 19999:19999
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - pentest-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - '9091:9090' # Puerto ajustado
+    volumes:
+      - ./services/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - pentest-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=changeme
+    ports:
+      - '3001:3000' # Puerto ajustado
+    networks:
+      - pentest-net
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    ports:
+      - '16686:16686'
+      - '6831:6831/udp'
+    networks:
+      - pentest-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - '8085:8080' # Puerto ajustado
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - pentest-net
+
+  falco:
+    image: falcosecurity/falco:latest
+    container_name: falco
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - /dev:/host/dev
+      - /proc:/host/proc:ro
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - ./services/falco/falco_rules.local.yaml:/etc/falco/falco_rules.local.yaml:ro
+    networks:
+      - pentest-net
+
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: suricata
+    network_mode: host
+    volumes:
+      - ./services/suricata:/etc/suricata
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9001:9000" # Puerto ajustado
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_logs:/opt/sonarqube/logs
+    networks:
+      - pentest-net
+
+  zap-af:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap-af
+    working_dir: /zap/wrk
+    volumes:
+      - zap-reports:/zap/wrk
+      - ./services/zap/wrk/plan.yml:/zap/wrk/plan.yml # Ruta actualizada
+    command: ["zap.sh","-cmd","-autorun","/zap/wrk/plan.yml"]
+    networks:
+      - pentest-net
+
+  # Servicios del laboratorio de VLANs (M3/Leccion2)
+  router_vlan_m3l2:
+    image: alpine
+    container_name: router_vlan_m3l2
+    command: ["sh", "-c", "apk add iptables iproute2 iputils && sleep infinity"]
+    privileged: true
+    networks:
+      vlan10:
+        ipv4_address: 192.168.110.254
+
+  admin_pc_vlan_m3l2:
+    image: alpine
+    container_name: admin_pc_vlan_m3l2
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      vlan10:
+        ipv4_address: 192.168.110.10
+
+  dev_pc_vlan_m3l2:
+    image: alpine
+    container_name: dev_pc_vlan_m3l2
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      vlan20:
+        ipv4_address: 192.168.120.10
+
+  support_pc_vlan_m3l2:
+    image: alpine
+    container_name: support_pc_vlan_m3l2
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      vlan30:
+        ipv4_address: 192.168.130.10
+
+  server_vlan_m3l2:
+    image: alpine
+    container_name: server_vlan_m3l2
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      vlan40:
+        ipv4_address: 192.168.140.10
+
+  # Servicios del laboratorio de VLANs (M3/Leccion6)
+  router_vlan_m3l6:
+    image: alpine
+    container_name: router_vlan_m3l6
+    command: ["sh", "-c", "apk add iptables iproute2 iputils && sleep infinity"]
+    privileged: true
+    networks:
+      admin_net:
+        ipv4_address: 192.168.100.30
+
+  admin_pc_vlan_m3l6:
+    image: alpine
+    container_name: admin_pc_vlan_m3l6
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      admin_net:
+        ipv4_address: 192.168.100.10
+
+  finance_pc_vlan_m3l6:
+    image: alpine
+    container_name: finance_pc_vlan_m3l6
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      finance_net:
+        ipv4_address: 192.168.100.34
+
+  hr_pc_vlan_m3l6:
+    image: alpine
+    container_name: hr_pc_vlan_m3l6
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      hr_net:
+        ipv4_address: 192.168.100.66
+
+  prod_pc_vlan_m3l6:
+    image: alpine
+    container_name: prod_pc_vlan_m3l6
+    command: ["sh", "-c", "apk add iputils && sleep infinity"]
+    networks:
+      prod_net:
+        ipv4_address: 192.168.100.98
+
+  # Servicios del laboratorio de VLANs (M3/Leccion8)
+  pc1_vlan_m3l8:
+    build:
+      context: ./services/vlan-lab/client
+      dockerfile: Dockerfile
+    container_name: pc1_vlan_m3l8
+    networks:
+      laboratorio_vlan10:
+        ipv4_address: 10.100.10.10
+
+  pc2_vlan_m3l8:
+    build:
+      context: ./services/vlan-lab/client
+      dockerfile: Dockerfile
+    container_name: pc2_vlan_m3l8
+    networks:
+      laboratorio_vlan20:
+        ipv4_address: 10.100.20.10
+
+  pc3_vlan_m3l8:
+    build:
+      context: ./services/vlan-lab/client
+      dockerfile: Dockerfile
+    container_name: pc3_vlan_m3l8
+    networks:
+      laboratorio_vlan30:
+        ipv4_address: 10.100.30.10
+
+  pc4_vlan_m3l8:
+    build:
+      context: ./services/vlan-lab/client
+      dockerfile: Dockerfile
+    container_name: pc4_vlan_m3l8
+    networks:
+      laboratorio_vlan40:
+        ipv4_address: 10.100.40.10
+
+  router_vlan_m3l8:
+    build:
+      context: ./services/vlan-lab/router
+      dockerfile: Dockerfile
+    container_name: router_vlan_m3l8
+    cap_add:
+      - NET_ADMIN
+    command: /entrypoint.sh
+    networks:
+      laboratorio_vlan10:
+        ipv4_address: 10.100.10.2
+      laboratorio_vlan20:
+        ipv4_address: 10.100.20.2
+      laboratorio_vlan30:
+        ipv4_address: 10.100.30.2
+      laboratorio_vlan40:
+        ipv4_address: 10.100.40.2
+
+  # Servicios del laboratorio de aplicaciones web (M3/Leccion4)
+  traefik_web_apps:
+    image: traefik:v2.11
+    container_name: traefik_web_apps
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "82:80" # Puerto ajustado
+      - "8086:8080" # Puerto ajustado
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web-apps-lab-net
+
+  portainer_web_apps:
+    image: portainer/portainer-ce
+    container_name: portainer_web_apps
+    restart: always
+    ports:
+      - "9002:9000" # Puerto ajustado
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.middlewares.portainer-strip.stripprefix.prefixes=/portainer"
+      - "traefik.http.routers.portainer.middlewares=portainer-strip"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - web-apps-lab-net
+
+  app_saludo_web_apps:
+    image: nginx:alpine
+    container_name: app_saludo_web_apps
+    volumes:
+      - ./services/web-apps-lab/saludo:/usr/share/nginx/html:ro # Ruta actualizada
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.saludo.rule=PathPrefix(`/saludo`)"
+      - "traefik.http.routers.saludo.entrypoints=web"
+      - "traefik.http.services.saludo.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.saludo-strip.stripprefix.prefixes=/saludo"
+      - "traefik.http.routers.saludo.middlewares=saludo-strip"
+    networks:
+      - web-apps-lab-net
+
+  app_usuarios_web_apps:
+    image: python:3.11
+    container_name: app_usuarios_web_apps
+    depends_on:
+      - postgres_web_apps
+    working_dir: /app
+    volumes:
+      - ./services/web-apps-lab/app_usuarios:/app # Ruta actualizada
+    command: >
+      sh -c "pip install flask psycopg2-binary &&
+             python app.py"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.usuarios.rule=PathPrefix(`/usuarios`)"
+      - "traefik.http.routers.usuarios.entrypoints=web"
+      - "traefik.http.services.usuarios.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.usuarios-strip.stripprefix.prefixes=/usuarios"
+      - "traefik.http.routers.usuarios.middlewares=usuarios-strip"
+    networks:
+      - web-apps-lab-net
+
+  postgres_web_apps:
+    image: postgres:15
+    container_name: postgres_web_apps
+    environment:
+      POSTGRES_DB: usersdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./services/web-apps-lab/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d # Ruta actualizada
+    networks:
+      - web-apps-lab-net
+
+  pgadmin_web_apps:
+    image: dpage/pgadmin4
+    container_name: pgadmin_web_apps
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "5050:80"
+    networks:
+      - web-apps-lab-net
+
+  # Servicios del laboratorio de intranet (M3/Leccion5)
+  nginx_intranet:
+    build: ./services/nginx-intranet # Ruta actualizada
+    container_name: nginx_intranet
+    ports:
+      - "83:80" # Puerto ajustado
+    volumes:
+      - ./services/nginx-intranet/nginx.conf:/etc/nginx/conf.d/default.conf # Ruta actualizada
+      - ./services/nginx-intranet/app:/usr/share/nginx/html:ro # Ruta actualizada
+    networks:
+      - red_intranet
+
+  # Servicios del laboratorio Cyberlab (M8/Leccion1)
+  frontend_cyberlab:
+    image: nginx:latest
+    container_name: frontend_cyberlab
+    volumes:
+      - ./services/cyberlab/frontend:/usr/share/nginx/html:ro # Ruta actualizada
+    ports:
+      - "8087:80" # Puerto ajustado
+    networks:
+      - cyberlab_net
+
+  backend_cyberlab:
+    build:
+      context: ./services/cyberlab # Ruta actualizada
+      dockerfile: Dockerfile.backend
+    container_name: backend_cyberlab
+    volumes:
+      - logs:/app/logs
+      - db:/app/db
+    ports:
+      - "8000:8000"
+    networks:
+      - cyberlab_net
+
+  waf_cyberlab:
+    build:
+      context: ./services/cyberlab # Ruta actualizada
+      dockerfile: Dockerfile.waf
+    container_name: waf_cyberlab
+    ports:
+      - "8001:8001"
+    networks:
+      - cyberlab_net
+
+  sast_cyberlab:
+    build:
+      context: ./services/cyberlab # Ruta actualizada
+      dockerfile: Dockerfile.sast
+    container_name: sast_cyberlab
+    ports:
+      - "8002:8002"
+    networks:
+      - cyberlab_net
+
+  csp_cyberlab:
+    build:
+      context: ./services/cyberlab # Ruta actualizada
+      dockerfile: Dockerfile.csp
+    container_name: csp_cyberlab
+    ports:
+      - "8003:8003"
+    networks:
+      - cyberlab_net
+
+  attacker_cyberlab:
+    build:
+      context: ./services/cyberlab # Ruta actualizada
+      dockerfile: Dockerfile.attacker
+    container_name: attacker_cyberlab
+    depends_on:
+      - backend_cyberlab
+    networks:
+      - cyberlab_net
+    command: ["python", "attacker/attack_script.py"]
+
+  # Servicios del laboratorio de seguridad API (M8/Leccion4)
+  api_sec_api:
+    build: ./services/sec-api/api # Ruta actualizada
+    env_file:
+      - ./services/sec-api/api/.env # Ruta actualizada
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8006:8000" # Puerto ajustado
+    depends_on:
+      - jaeger
+      - logstash
+
+  elasticsearch_sec_api:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports: ["9201:9200"] # Puerto ajustado
+    healthcheck: { test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null"], interval: 10s, retries: 30 }
+    networks:
+      - sec_api_net
+
+  kibana_sec_api:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch_sec_api:9201 # Ruta actualizada
+    ports: ["5602:5601"] # Puerto ajustado
+    depends_on: [elasticsearch_sec_api]
+    networks:
+      - sec_api_net
+
+  logstash_sec_api:
+    image: docker.elastic.co/logstash/logstash:8.13.4
+    volumes:
+      - ./services/sec-api/logstash/pipeline:/usr/share/logstash/pipeline # Ruta actualizada
+    ports: ["5045:5044/udp"] # Puerto ajustado
+    depends_on: [elasticsearch_sec_api]
+    networks:
+      - sec_api_net
+
+  jaeger_sec_api:
+    image: jaegertracing/all-in-one:1.57
+    ports: ["16687:16686", "6832:6831/udp"] # Puertos ajustados
+    networks:
+      - sec_api_net
+
+  prometheus_sec_api:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./services/sec-api/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml # Ruta actualizada
+    ports: ["9092:9090"] # Puerto ajustado
+    networks:
+      - sec_api_net
+
+  grafana_sec_api:
+    image: grafana/grafana:10.4.9
+    volumes:
+      - ./services/sec-api/grafana/provisioning:/etc/grafana/provisioning # Ruta actualizada
+    ports: ["3002:3000"] # Puerto ajustado
+    depends_on: [prometheus_sec_api]
+    networks:
+      - sec_api_net
+
+  zap-af_sec_api:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    depends_on: [api_sec_api]
+    working_dir: /zap/wrk
+    volumes:
+      - zap-reports:/zap/wrk
+      - ./services/sec-api/zap-reports/plan.yml:/zap/wrk/plan.yml # Ruta actualizada
+    command: ["zap.sh","-cmd","-autorun","/zap/wrk/plan.yml"]
+    networks:
+      - sec_api_net
+
+  # Servicios del laboratorio de Portafolio (M8/Portafolio)
+  db_portfolio:
+    image: postgres:16
+    container_name: pfm8_db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: appdb
+    ports: ["5432:5432"]
+    volumes:
+      - ./services/portfolio/db/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro # Ruta actualizada
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - portfolio_net
+
+  backend_portfolio:
+    build: ./services/portfolio/backend # Ruta actualizada
+    container_name: pfm8_backend
+    depends_on:
+      db_portfolio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://app:app@db_portfolio:5432/appdb # Ruta actualizada
+      APP_ENV: "dev"
+      CORS_ALLOW_ORIGINS: "*"
+      JWT_SECRET: "dev-secret"
+    ports: ["8007:8000"] # Puerto ajustado
+    volumes:
+      - ./services/portfolio/backend/app:/app/app # Ruta actualizada
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - portfolio_net
+
+  sonarqube_portfolio:
+    image: sonarqube:community
+    container_name: pfm8_sonarqube
+    ports: ["9003:9000"] # Puerto ajustado
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_logs:/opt/sonarqube/logs
+    networks:
+      - portfolio_net
+
+  prometheus_portfolio:
+    image: prom/prometheus
+    container_name: pfm8_prometheus
+    volumes:
+      - ./services/portfolio/monitoring/prometheus-grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro # Ruta actualizada
+    ports: ["9093:9090"] # Puerto ajustado
+    depends_on:
+      backend_portfolio:
+        condition: service_healthy
+    networks:
+      - portfolio_net
+
+  grafana_portfolio:
+    image: grafana/grafana
+    container_name: pfm8_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports: ["3003:3000"] # Puerto ajustado
+    volumes:
+      - ./services/portfolio/monitoring/prometheus-grafana/grafana/provisioning:/etc/grafana/provisioning # Ruta actualizada
+      - ./services/portfolio/monitoring/prometheus-grafana/grafana/dashboards:/var/lib/grafana/dashboards # Ruta actualizada
+    depends_on:
+      - prometheus_portfolio
+    networks:
+      - portfolio_net
+
+  # Servicios del laboratorio de Hacking Ético (M6/Leccion3/Actividad1)
+  dvwa_hacklab:
+    image: vulnerables/web-dvwa
+    container_name: dvwa_hacklab
+    ports:
+      - "8088:80" # Puerto ajustado
+    restart: unless-stopped
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=p@ssw0rd
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+      - PHP_DISPLAY_ERRORS=1
+    networks:
+      - hacklab-net
+
+  dvwa-mysql_hacklab:
+    image: mysql:5.7
+    container_name: dvwa-mysql_hacklab
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+    volumes:
+      - dvwa-mysql-data:/var/lib/mysql
+    networks:
+      - hacklab-net
+
+  juiceshop_hacklab:
+    image: bkimminich/juice-shop
+    container_name: juiceshop_hacklab
+    ports:
+      - "3004:3000" # Puerto ajustado
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  mutillidae_hacklab:
+    image: citizenstig/nowasp
+    container_name: mutillidae_hacklab
+    ports:
+      - "8089:80" # Puerto ajustado
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  bwapp_hacklab:
+    image: raesene/bwapp
+    container_name: bwapp_hacklab
+    ports:
+      - "8090:80" # Puerto ajustado
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  webgoat_hacklab:
+    image: webgoat/webgoat
+    container_name: webgoat_hacklab
+    ports:
+      - "8091:8080" # Puerto ajustado
+    restart: unless-stopped
+    networks:
+      - hacklab-net
+
+  webwolf_hacklab:
+    image: webgoat/webwolf
+    container_name: webwolf_hacklab
+    ports:
+      - "9094:9090" # Puerto ajustado
+    restart: unless-stopped
+    networks:
+      - hacklab-net
