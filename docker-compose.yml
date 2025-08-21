@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 networks:
   pentest-net:
@@ -87,6 +87,9 @@ networks:
   # Red para el laboratorio de DVWA (M6/Leccion1/Actividad1)
   dvwa-net:
     driver: bridge
+  # Red para n8n
+  n8nnet:
+    driver: bridge
 
 volumes:
   db_data:
@@ -106,6 +109,7 @@ volumes:
   netdatacache:
   data01:
   zap-reports:
+  n8n_data:
 
 services:
   # OWASP Juice Shop: Vulnerable Web Application
@@ -807,7 +811,7 @@ services:
   api_sec_api:
     build: ./services/sec-api/api # Ruta actualizada
     env_file:
-      - ./services/sec-api/api/.env # Ruta actualizada
+      - ./services/sec-api/api/.env.example # Ruta actualizada
     environment:
       - PYTHONUNBUFFERED=1
     ports:
@@ -1033,3 +1037,73 @@ services:
     restart: unless-stopped
     networks:
       - hacklab-net
+
+  # n8n: Workflow Automation Tool
+  n8n_postgres:
+    image: postgres:15-alpine
+    container_name: n8n_postgres
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - n8nnet
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    depends_on:
+      - n8n_postgres
+    ports:
+      - "5678:5678"
+    env_file:
+      - ./.env
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - n8nnet
+
+  # Additional Pentesting Tools
+  nmap:
+    image: instrumentisto/nmap
+    container_name: nmap
+    restart: "no" # Typically run on demand
+    networks:
+      - pentest-net
+    command: sleep infinity # Keep container running for manual execution
+
+  metasploit:
+    image: metasploitframework/metasploit-framework
+    container_name: metasploit
+    restart: "no" # Typically run on demand
+    networks:
+      - pentest-net
+    volumes:
+      - data01:/root/.msf4 # Persistent storage for Metasploit data
+    command: sleep infinity # Keep container running for manual execution
+
+  sqlmap:
+    image: sqlmap/sqlmap
+    container_name: sqlmap
+    restart: "no" # Typically run on demand
+    networks:
+      - pentest-net
+    command: sleep infinity # Keep container running for manual execution
+
+  nikto:
+    image: sullo/nikto
+    container_name: nikto
+    restart: "no" # Typically run on demand
+    networks:
+      - pentest-net
+    command: sleep infinity # Keep container running for manual execution
+
+  gobuster:
+    image: ghcr.io/assetnote/gobuster
+    container_name: gobuster
+    restart: "no" # Typically run on demand
+    networks:
+      - pentest-net
+    command: sleep infinity # Keep container running for manual execution

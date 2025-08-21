@@ -16,6 +16,22 @@ Este entorno está orquestado por Docker Compose y se compone de los siguientes 
 | **OWASP Juice Shop** | `http://localhost:3000` | N/A (autenticación propia) |
 | **DVWA** | `http://localhost:8080` | `admin` / `password` |
 
+### Herramientas de Automatización
+
+| Servicio | URL de Acceso | Credenciales por Defecto |
+| :--- | :--- | :--- |
+| **n8n** | `http://localhost:5678` | Ver archivo `.env` (por defecto: `admin` / `changeme`) |
+
+### Herramientas de Pentesting Adicionales
+
+| Servicio | Uso Principal | Notas |
+| :--- | :--- | :--- |
+| **Nmap** | Escaneo de redes | Ejecutar vía `docker exec` |
+| **Metasploit** | Explotación y post-explotación | Ejecutar vía `docker exec` |
+| **Sqlmap** | Inyección SQL | Ejecutar vía `docker exec` |
+| **Nikto** | Escaneo de vulnerabilidades web | Ejecutar vía `docker exec` |
+| **GoBuster** | Fuerza bruta de directorios/archivos | Ejecutar vía `docker exec` |
+
 ### Laboratorio de Microservicios y Monitoreo (SIEM)
 
 | Servicio | URL/Puerto de Acceso | Propósito |
@@ -48,6 +64,21 @@ docker-compose up -d
 ```
 
 El primer despliegue puede tardar varios minutos mientras Docker descarga las imágenes base y construye los servicios personalizados.
+
+**Nota importante sobre n8n:** El servicio n8n utiliza un archivo `.env` para sus configuraciones y credenciales. Asegúrate de revisar y personalizar el archivo `.env` en la raíz del proyecto con tus propios valores antes de levantar el laboratorio.
+
+### Acceso a los Servicios y Herramientas
+
+Una vez que el laboratorio esté levantado, puedes acceder a los servicios de la siguiente manera:
+
+*   **Aplicaciones Web Vulnerables (Juice Shop, DVWA, etc.)**: Accede a través de los puertos listados en la sección "Arquitectura del Laboratorio" (ej. `http://localhost:3000` para Juice Shop).
+*   **n8n**: Accede a la interfaz web de n8n en `http://localhost:5678`. Las credenciales por defecto son `admin` / `changeme` (puedes cambiarlas en el archivo `.env`).
+*   **Herramientas de Pentesting Adicionales (Nmap, Metasploit, Sqlmap, Nikto, GoBuster)**: Estas herramientas se ejecutan en contenedores que permanecen activos. Para usarlas, debes ejecutar comandos dentro de sus respectivos contenedores. Por ejemplo:
+    *   **Nmap**: `docker exec -it nmap nmap [opciones] [objetivo]`
+    *   **Metasploit**: `docker exec -it metasploit msfconsole`
+    *   **Sqlmap**: `docker exec -it sqlmap sqlmap [opciones] -u "http://ejemplo.com/vuln?id=1"`
+    *   **Nikto**: `docker exec -it nikto nikto -h http://ejemplo.com`
+    *   **GoBuster**: `docker exec -it gobuster gobuster dir -u http://ejemplo.com -w /path/to/wordlist.txt`
 
 ### 2. Usar el Toolkit de Pentesting en Python
 
