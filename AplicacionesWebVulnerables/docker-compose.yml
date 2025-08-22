@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  juice-shop:
+    image: bkimminich/juice-shop
+    container_name: juice-shop
+    ports:
+      - "3001:3000"
+    networks:
+      - vulnerable-apps-net
+    restart: unless-stopped
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    ports:
+      - "8080:80"
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=p@ssw0rd
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+      - PHP_DISPLAY_ERRORS=1
+    networks:
+      - vulnerable-apps-net
+    depends_on:
+      - dvwa-db
+    restart: unless-stopped
+
+  dvwa-db:
+    image: mysql:5.7
+    container_name: dvwa-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+    volumes:
+      - dvwa-mysql-data:/var/lib/mysql
+    networks:
+      - vulnerable-apps-net
+    restart: unless-stopped
+
+networks:
+  vulnerable-apps-net:
+    driver: bridge
+
+volumes:
+  dvwa-mysql-data:
