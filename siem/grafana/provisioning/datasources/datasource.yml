@@ -1,8 +1,0 @@
-apiVersion: 1
-datasources:
-  - name: Prometheus
-    uid: prometheus_ds          # <-- UID fijo
-    type: prometheus
-    url: http://prometheus:9090
-    access: proxy
-    isDefault: true
