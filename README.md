@@ -1,4 +1,4 @@
-# Repositorio de Laboratorios de Hacking Ético
+# 📌Repositorio de Laboratorios de Hacking Ético
 
 Este repositorio contiene una colección de laboratorios, herramientas y aplicaciones para practicar diversas áreas de la ciberseguridad y el hacking ético. El proyecto ha sido reestructurado en carpetas temáticas para eliminar redundancias y facilitar el acceso y la ejecución de cada componente.
 
