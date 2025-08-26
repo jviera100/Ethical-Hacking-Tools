@@ -1,0 +1,41 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio Backend y su base de datos.
+# Levanta un stack autocontenido y funcional.
+
+services:
+  backend:
+    build: .
+    container_name: siem_backend
+    ports:
+      - "8002:8000" # Mapeado a 8002 para no colisionar con otros servicios.
+    environment:
+      # La URL apunta al servicio 'db' definido abajo.
+      - DATABASE_URL=postgresql+psycopg2://app:app@db:5432/appdb
+      - CORS_ALLOW_ORIGINS=*
+    networks:
+      - siem_net
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: siem_postgres_db
+    environment:
+      - POSTGRES_DB=appdb
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app # Contraseña simple para entorno de laboratorio.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - siem_net
+    # No es necesario exponer el puerto 5432 al host, la comunicación
+    # es interna a través de la red de Docker.
+
+volumes:
+  postgres_data:
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net # Se une a la misma red que el servicio API.

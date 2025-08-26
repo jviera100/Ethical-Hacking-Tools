@@ -1,0 +1,25 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Grafana (Visualización)
+
+services:
+  grafana:
+    image: grafana/grafana:10.1.5
+    container_name: siem_grafana
+    ports:
+      # Puerto para acceder a la interfaz web de Grafana.
+      - "3000:3000"
+    volumes:
+      # Monta el directorio de provisioning que contiene la configuración
+      # de la fuente de datos (Prometheus) y los paneles.
+      - ./provisioning:/etc/grafana/provisioning/
+    networks:
+      - siem_net
+    # Grafana depende de Prometheus para obtener los datos a visualizar.
+    depends_on:
+      - prometheus
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

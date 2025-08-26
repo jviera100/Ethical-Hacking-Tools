@@ -1,65 +1,91 @@
-# 📌Repositorio de Laboratorios de Hacking Ético
+# Arsenal de Hacking Ético y Ciberseguridad
 
-Este repositorio contiene una colección de laboratorios, herramientas y aplicaciones para practicar diversas áreas de la ciberseguridad y el hacking ético. El proyecto ha sido reestructurado en carpetas temáticas para eliminar redundancias y facilitar el acceso y la ejecución de cada componente.
+---
 
-## Estructura del Repositorio
+### Visión del Arquitecto
 
-A continuación se describe el contenido de cada una de las carpetas principales:
+Este repositorio es una navaja suiza de ciberseguridad, consolidando un arsenal de laboratorios, herramientas y sistemas para la práctica y el estudio del hacking ético. Ha sido revisado y re-arquitecturado para que cada componente sea fácil de desplegar, robusto y esté bien documentado, permitiendo al usuario centrarse en el aprendizaje y no en la configuración.
 
-- **`siem/`**: Contiene un entorno completo de SIEM (Security Information and Event Management) consolidado, con herramientas como Wazuh, Elasticsearch, Kibana, Suricata, Falco, y más.
-- **`AplicacionesWebVulnerables/`**: Agrupa aplicaciones web deliberadamente vulnerables, como OWASP Juice Shop y DVWA, para practicar hacking web.
-- **`Subnetting/`**: Incluye varios laboratorios para practicar la segmentación de redes (subnetting) y configuración de topologías de red con Docker.
-- **`AplicacionesPython/`**: Colección de diversas aplicaciones desarrolladas en Python, incluyendo apps web con Flask, scripts de base de datos y aplicaciones full-stack.
-- **`LaboratoriosWebPHP_MySQL/`**: Contiene aplicaciones web de ejemplo desarrolladas en PHP y MySQL, útiles para entender vulnerabilidades comunes en este tipo de entornos.
-- **`InformesDeAuditoria/`**: Contiene ejemplos de informes, scripts y otros artefactos relacionados con portafolios de auditoría de ciberseguridad.
-- **`HerramientasYServicios/`**: Agrupa herramientas de seguridad (OpenVAS, Kali Linux), servicios de red (DNS) y configuraciones para servidores web (Nginx, Traefik).
-- **`DiagramasDeArquitectura/`**: Material conceptual, diagramas y documentos de diseño, como el ejemplo de Flujo de Login Universal.
+---
 
-## Instrucciones de Uso
+### Requisitos Globales
 
-### 1. Entorno SIEM
+Para utilizar este arsenal, es indispensable contar con el siguiente software:
 
-Para levantar todo el stack de monitoreo y seguridad:
+- **Docker:** [https://www.docker.com/get-started](https://www.docker.com/get-started)
+- **Docker Compose:** Generalmente incluido con Docker Desktop.
 
-```bash
-cd siem
-docker-compose up -d
-```
+#### Entorno de Ejecución Recomendado
 
-### 2. Aplicaciones Web Vulnerables
+Este proyecto, debido a su complejidad y al uso intensivo de redes de contenedores y scripts de sistema, está **optimizado para un entorno de ejecución Linux nativo o una máquina virtual (VM) dedicada**.
 
-Esta carpeta contiene OWASP Juice Shop y DVWA. Para iniciarlas:
+- **Opción 1 (Recomendada): Máquina Virtual (ej. VirtualBox, VMware)**
+  - **Razón:** Ofrece el **máximo aislamiento y estabilidad**. La VM tiene su propia pila de red y recursos dedicados, lo que evita conflictos y comportamientos inesperados, especialmente al desplegar sistemas complejos como el SIEM.
 
-```bash
-cd AplicacionesWebVulnerables
-docker-compose up -d
-```
-- **OWASP Juice Shop** estará disponible en `http://localhost:3001`.
-- **DVWA** estará disponible en `http://localhost:8080`.
+- **Opción 2 (Avanzado): Subsistema de Windows para Linux (WSL 2)**
+  - Es funcional, pero la capa de red compartida con Windows puede generar inestabilidad en sistemas distribuidos complejos. Úselo si se siente cómodo depurando problemas de red.
 
-### 3. Laboratorios de Subnetting
+---
 
-Cada laboratorio en esta carpeta es un escenario de red independiente. Para ejecutar uno, entra en el subdirectorio correspondiente.
+### Mapa del Repositorio
 
-```bash
-cd Subnetting/lab1  # o lab2, lab3
-docker-compose up -d
-```
+- `SIEM/`: Contiene un sistema de **Gestión de Información y Eventos de Seguridad (SIEM)** basado en Wazuh. Ha sido re-diseñado para un despliegue automatizado.
+- `AplicacionesWebVulnerables/`: Laboratorios para practicar hacking web, incluyendo **OWASP Juice Shop** y **DVWA**.
+- `HerramientasYServicios/`: Colección de herramientas y servicios de seguridad y red, como **Kali Linux**, **OpenVAS**, un servidor **DNS** y **Nginx**.
+- `Subnetting/`: Laboratorios basados en Docker para practicar la **segmentación de redes**.
+- `LaboratoriosWebPHP_MySQL/`: Aplicaciones web vulnerables en PHP/MySQL diseñadas para un entorno **no-Docker** (como XAMPP/WAMP).
+- `InformesDeAuditoria/` y `DiagramasDeArquitectura/`: Ejemplos de artefactos y documentos de soporte para auditorías y diseño de sistemas.
 
-### 4. Aplicaciones Python
+---
 
-Cada aplicación es independiente. Navega a su subdirectorio y sigue las instrucciones de sus archivos (`README.md`, `requirements.txt`, etc.).
+### Flujos de Trabajo Principales
 
-### 5. Laboratorios Web PHP con MySQL
+A continuación se muestran las instrucciones para los casos de uso más comunes.
 
-Estos laboratorios están diseñados para ser ejecutados en un entorno como XAMPP, aunque también puedes adaptarlos a Docker. El código fuente y los scripts de base de datos se encuentran en sus respectivas carpetas (`lab1`, `lab2`).
+#### Workflow 1: Desplegar el SIEM con Wazuh
 
-### 6. Herramientas y Servicios
+El SIEM es el componente más complejo, pero su despliegue ha sido completamente automatizado.
 
-Cada herramienta o servicio tiene su propia configuración. Entra en el subdirectorio de tu interés (`KaliLinux`, `nginx`, `openvas`, etc.) y utiliza el `docker-compose.yml` correspondiente.
+1.  Navegue al directorio:
+    ```bash
+    cd SIEM
+    ```
+2.  Ejecute el script de inicio:
+    ```bash
+    bash start-siem.sh
+    ```
+    El script se encargará de todo. Consulte el `SIEM/README.md` para más detalles sobre el acceso y credenciales.
 
-- **Ejemplo con Kali Linux:**
-  ```bash
-  cd HerramientasYServicios/KaliLinux
-  docker-compose up
-  ```
+#### Workflow 2: Iniciar Laboratorios de Hacking Web
+
+Para practicar con aplicaciones web vulnerables:
+
+1.  Navegue al directorio:
+    ```bash
+    cd AplicacionesWebVulnerables
+    ```
+2.  Levante los servicios:
+    ```bash
+    docker-compose up -d
+    ```
+- **OWASP Juice Shop:** [http://localhost:3001](http://localhost:3001)
+- **DVWA:** [http://localhost:8080](http://localhost:8080)
+
+#### Workflow 3: Utilizar una Herramienta Específica (ej. Kali Linux)
+
+Para iniciar un contenedor con una herramienta individual:
+
+1.  Navegue al directorio de la herramienta:
+    ```bash
+    cd HerramientasYServicios/KaliLinux
+    ```
+2.  Inicie el contenedor:
+    ```bash
+    docker-compose up
+    ```
+
+---
+
+### Sobre los Otros Servicios en SIEM
+
+Como observaste, el directorio `SIEM/` contiene muchas otras carpetas de servicios (`api`, `backend`, `falco`, `opa`, etc.). Estos parecen formar parte de una arquitectura de microservicios más grande que, en el estado actual del repositorio, no está orquestada ni documentada. La integración y el despliegue de estos componentes es un tema avanzado que queda fuera del alcance de la re-arquitectura actual del stack de Wazuh.

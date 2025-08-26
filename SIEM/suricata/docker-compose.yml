@@ -1,0 +1,29 @@
+version: '3.7'
+
+# docker-compose.yml para Suricata (IDS/IPS de Red)
+
+services:
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: siem_suricata
+    # El modo de red 'host' es necesario para que Suricata pueda monitorear
+    # el tráfico de red del sistema anfitrión directamente.
+    network_mode: host
+    # Se requieren capacidades de red elevadas para la captura de paquetes.
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      # Monta todos los archivos de configuración locales.
+      - ./suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./classification.config:/etc/suricata/classification.config:ro
+      - ./reference.config:/etc/suricata/reference.config:ro
+      - ./threshold.config:/etc/suricata/threshold.config:ro
+      # Monta un directorio local para guardar los logs y alertas de Suricata.
+      - ./logs:/var/log/suricata/
+      # Monta el socket de Docker para que Suricata pueda enriquecer las alertas
+      # con metadatos de los contenedores (opcional pero recomendado).
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Comando para iniciar Suricata y decirle que escuche en la interfaz 'eth0'.
+    # Cambie 'eth0' por la interfaz de red principal de su máquina si es diferente.
+    command: suricata -i eth0

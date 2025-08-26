@@ -1,0 +1,38 @@
+version: '3.7'
+
+# docker-compose.yml para el API Gateway (Kong)
+
+services:
+  kong:
+    image: kong:3.4
+    container_name: siem_kong_gateway
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    volumes:
+      - ./kong.yml:/usr/local/kong/declarative/kong.yml:ro
+    ports:
+      # Puertos del Proxy para el tráfico de clientes.
+      - "80:8000"
+      - "443:8443"
+      # Puertos de la API de Administración de Kong.
+      - "8001:8001"
+      - "8444:8444"
+    networks:
+      - siem_net
+    # Kong depende de los servicios que va a gestionar.
+    # Esta sección asume que estos servicios están corriendo en la misma red.
+    depends_on:
+      - auth-service
+      - user-service
+      - product-service
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

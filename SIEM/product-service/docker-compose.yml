@@ -1,0 +1,17 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Productos
+
+services:
+  product-service:
+    build: .
+    container_name: siem_product_service
+    ports:
+      - "8004:8002" # Mapeado a 8004 para no colisionar.
+    networks:
+      - siem_net
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

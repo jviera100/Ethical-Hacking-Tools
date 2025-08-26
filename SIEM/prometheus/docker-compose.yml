@@ -1,0 +1,25 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Prometheus (Métricas)
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: siem_prometheus
+    ports:
+      # Puerto para acceder a la interfaz web de Prometheus.
+      - "9090:9090"
+    volumes:
+      # Monta el archivo de configuración de Prometheus.
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - siem_net
+    # Prometheus depende del servicio 'api' para recolectar métricas.
+    # Esta sección asume que el servicio 'api' está corriendo en la misma red.
+    depends_on:
+      - api
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

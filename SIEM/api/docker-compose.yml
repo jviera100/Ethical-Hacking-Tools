@@ -1,0 +1,30 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de API
+# Permite levantar este microservicio de forma independiente.
+
+services:
+  api:
+    # Construye la imagen a partir del Dockerfile en el directorio actual.
+    build: .
+    container_name: siem_api
+
+    # Mapea el puerto 8000 del contenedor al 8001 del host para evitar conflictos.
+    ports:
+      - "8001:8000"
+
+    # Carga las variables de entorno desde el archivo .env.
+    # Copie .env.example a .env y personalícelo si es necesario.
+    env_file:
+      - .env
+
+    # Conecta el servicio a una red compartida para que pueda comunicarse
+    # con otros servicios como Logstash y Jaeger.
+    networks:
+      - siem_net
+
+# Definición de la red compartida. Otros servicios pueden unirse a esta misma red.
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

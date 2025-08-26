@@ -1,0 +1,18 @@
+version: '3.7'
+
+# docker-compose.yml para Open Policy Agent (OPA)
+
+services:
+  opa:
+    build: .
+    container_name: siem_opa
+    ports:
+      # Puerto estándar de la API de OPA.
+      - "8181:8181"
+    networks:
+      - siem_net
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

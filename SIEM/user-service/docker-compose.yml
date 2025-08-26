@@ -1,0 +1,17 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Usuarios
+
+services:
+  user-service:
+    build: .
+    container_name: siem_user_service
+    ports:
+      - "8005:8001" # Mapeado a 8005 para no colisionar.
+    networks:
+      - siem_net
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

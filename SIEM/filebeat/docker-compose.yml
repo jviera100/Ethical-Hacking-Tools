@@ -1,0 +1,24 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Filebeat (Recolector de Logs)
+
+services:
+  filebeat:
+    # Usamos la imagen oficial directamente, ya que no necesitamos una construcción personalizada.
+    image: docker.elastic.co/beats/filebeat:8.12.2
+    container_name: siem_filebeat
+    volumes:
+      # Monta nuestro archivo de configuración personalizado.
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # Monta un directorio local de logs. Puedes dejar tus archivos .log aquí.
+      - ./logs:/usr/share/filebeat/logs:ro
+    networks:
+      - siem_net
+    # Filebeat depende de Logstash para enviar los datos.
+    depends_on:
+      - logstash
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

@@ -1,0 +1,13 @@
+# filebeat.yml - Configuración de Ejemplo
+
+filebeat.inputs:
+- type: log
+  enabled: true
+  # Directorio dentro del contenedor donde Filebeat buscará logs.
+  paths:
+    - /usr/share/filebeat/logs/*.log
+
+# Salida hacia Logstash
+output.logstash:
+  # El host 'logstash' y el puerto '5044' deben coincidir con el servicio de Logstash.
+  hosts: ["logstash:5044"]

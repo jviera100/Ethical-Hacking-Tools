@@ -1,6 +1,7 @@
 services:
   kali:
     image: kalilinux/kali-rolling
+    container_name: kali_pentest_box
     privileged: true
     tty: true
     stdin_open: true

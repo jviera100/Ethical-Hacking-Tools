@@ -1,0 +1,27 @@
+version: '3.7'
+
+# docker-compose.yml para el servicio de Logstash
+
+services:
+  logstash:
+    # Se recomienda usar una versión específica para evitar actualizaciones inesperadas.
+    image: logstash:8.11.3
+    container_name: siem_logstash
+    ports:
+      # Puerto para recibir logs de otros servicios (ej. del logger de la API).
+      - "5044:5044/udp"
+    volumes:
+      # Monta el pipeline de configuración de Logstash.
+      - ./pipeline:/usr/share/logstash/pipeline/
+    networks:
+      - siem_net
+    # Logstash depende de Elasticsearch para enviar los datos procesados.
+    # Esta sección asume que habrá un servicio llamado 'elasticsearch'
+    # definido en otro docker-compose y unido a la misma red.
+    depends_on:
+      - elasticsearch
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net

@@ -1,0 +1,30 @@
+version: '3.7'
+
+# docker-compose.yml para Falco (Detección de Amenazas en Runtime)
+# ADVERTENCIA: Esta configuración es privilegiada y requiere acceso al host.
+
+services:
+  falco:
+    image: falcosecurity/falco:latest
+    container_name: siem_falco
+    # Falco necesita acceso privilegiado para monitorear las llamadas del sistema del host.
+    privileged: true
+    # Comparte el namespace de PIDs con el host para ver todos los procesos.
+    pid: host
+    networks:
+      - siem_net
+    volumes:
+      # Monta las reglas personalizadas.
+      - ./falco_rules.local.yaml:/etc/falco/falco_rules.local.yaml:ro
+      # Monta directorios y dispositivos del host para que Falco pueda instrumentar el kernel.
+      - /dev:/host/dev:ro
+      - /proc:/host/proc:ro
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - /etc:/host/etc:ro
+
+networks:
+  siem_net:
+    driver: bridge
+    name: siem_net
